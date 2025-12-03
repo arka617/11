@@ -1,0 +1,60 @@
+name: CI Pipeline - C App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test-package-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1️⃣ Checkout source
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      # 2️⃣ Create build directory
+      - name: Prepare build folder
+        run: mkdir -p build
+
+      # 3️⃣ Build application
+      - name: Build application
+        run: |
+          gcc main.c -o build/app
+          ls -l build
+
+      # 4️⃣ Run unit tests
+      - name: Run unit tests
+        run: |
+          gcc TESTS/test2.c -o build/test_app
+          ./build/test_app
+          ls -l build
+
+      # 5️⃣ Create build artifact (zip)
+      - name: Create build artifact
+        run: zip -r build.zip build
+
+      # 6️⃣ Upload build artifact
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: c-build
+          path: build.zip
+
+      # 7️⃣ Simulated Deploy - download artifact
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: c-build
+          path: ./downloaded
+
+      # 8️⃣ Simulated Deploy - use secret safely
+      - name: Simulated Deploy - use secret
+        env:
+          ARKA_SECRET_API: ${{ secrets.ARKA_SECRET_API }}
+        run: |
+          echo "Downloaded files:"
+          ls -la ./downloaded
+          # Secret ব্যবহার করা হচ্ছে কিন্তু print করা হচ্ছে না
+          echo "Deployment simulated successfully!"
